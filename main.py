@@ -9,9 +9,15 @@ class mash:
         self.songs = json_
         self.Yin = []
         self.Yout = []
-        self.load(cached=cached)
 
-    def load(self, cached=True):
+        self._setup()
+        # self._load(cached=cached)
+
+    def _setup(self):
+        if not os.path.exists('cache'):
+            os.makedirs('cache')
+
+    def _load(self, cached=True):
         for song in self.songs:
             if os.path.exists("cache/%s.pkl"%song['name']):
                 print "\nLoading", song['name'], "from cache"
