@@ -1,4 +1,5 @@
 import librosa
+import numpy as np
 import pickle, json, os
 
 class mash:
@@ -9,9 +10,12 @@ class mash:
         self.songs = json_
         self.Yin = []
         self.Yout = []
+        self.beats = {'in': [], 'out': []}
+        self.tempo = {'in': 0, 'out': 0}
 
         self._setup()
-        # self._load(cached=cached)
+        self._load(cached=cached)
+        self._extract()
 
     def _setup(self):
         if not os.path.exists('cache'):
@@ -44,6 +48,31 @@ class mash:
                 except Exception as e:
                     print "[FAILED] Caching", song['name']
                     print e
+
+    def _extract(self):
+        # TODO: Add cosine distance similarity to choose the best mixout
+        self.Yout = self.Yout[0] # NOTE: considering 1mixin & 1mixout
+
+        self.tempo['in'], self.beats['in'] = librosa.beat.beat_track(y=self.Yin, sr=self.sr)
+        self.tempo['out'], self.beats['out'] = librosa.beat.beat_track(y=self.Yout, sr=self.sr)
+
+        self.OTAC()
+
+    def OTAC(self): # Optimal Tempo Adjustment Coefficient Computation
+        C = [-2, -1, 0, 1, 2]
+
+        Tin_ = [(2**c)*self.tempo['in'] for c in C]
+        TinIndex_ = np.argmin(np.absolute(Tin_, self.tempo['out']))
+        Copt = Ta_[TinIndex_]
+
+        Bopt = (2**Copt)*self.tempo['in']
+        Tlow, Thigh = np.min(Bopt, self.tempo['out']), np.max(Bopt, self.tempo['out'])
+
+        a, b = 2, 1
+        Ttgt = (a-b)*Tlow + np.sqrt( ((a-b)**2)*(Tlow**2) + 4*a*b*Thigh*Tlow )
+        Ttgt = Ttgt/(2*a)
+
+        self.tempo['tgt'] = Ttgt
 
 
 
