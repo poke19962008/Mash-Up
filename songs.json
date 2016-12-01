@@ -1,0 +1,11 @@
+[
+  {
+    "name": "Uptown Funk",
+    "path": "dump/uptown.mp3",
+    "mixin": true
+  }, {
+    "name": "Jam",
+    "path": "dump/uptown.mp3",
+    "mixin": false
+  }
+]
