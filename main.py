@@ -1,3 +1,5 @@
+from __future__ import division
+
 import librosa
 import numpy as np
 import pickle, json, os
@@ -27,8 +29,10 @@ class mash:
                 print "\nLoading", song['name'], "from cache"
                 with open("cache/%s.pkl"%song['name'], 'rb') as f:
                     if song['mixin']:
+                        print "Yin=", song['name']
                         self.Yin = pickle.load(f)
                     else:
+                        print "Yout=", song['name']
                         self.Yout.append(pickle.load(f))
                 continue
 
@@ -56,23 +60,63 @@ class mash:
         self.tempo['in'], self.beats['in'] = librosa.beat.beat_track(y=self.Yin, sr=self.sr)
         self.tempo['out'], self.beats['out'] = librosa.beat.beat_track(y=self.Yout, sr=self.sr)
 
-        self.OTAC()
+        print "TempoIn=", self.tempo['in']
+        print "TempoOut=", self.tempo['out']
 
-    def OTAC(self): # Optimal Tempo Adjustment Coefficient Computation
+        self._OTAC()
+        self._crossFadeRegion()
+
+    def _OTAC(self): # Optimal Tempo Adjustment Coefficient Computation
         C = [-2, -1, 0, 1, 2]
 
+        if self.tempo['in'] == self.tempo['out']:
+            self.tempo['tgt'] = self.tempo['in']
+            return
+
         Tin_ = [(2**c)*self.tempo['in'] for c in C]
-        TinIndex_ = np.argmin(np.absolute(Tin_, self.tempo['out']))
-        Copt = Ta_[TinIndex_]
-
+        TinIndex_ = np.argmin(np.absolute(Tin_ - self.tempo['out']))
+        Copt = Tin_[TinIndex_]
         Bopt = (2**Copt)*self.tempo['in']
-        Tlow, Thigh = np.min(Bopt, self.tempo['out']), np.max(Bopt, self.tempo['out'])
 
-        a, b = 2, 1
+        Tlow = np.min(Bopt, self.tempo['out'])
+        Thigh = np.max(Bopt, self.tempo['out'])
+
+        a, b = 0.765, 1
         Ttgt = (a-b)*Tlow + np.sqrt( ((a-b)**2)*(Tlow**2) + 4*a*b*Thigh*Tlow )
         Ttgt = Ttgt/(2*a)
 
+        print "FoptIn=", Ttgt/Bopt
+        print "FoptOut=", Ttgt/self.tempo['out']
+        print "Ttgt=", Ttgt
+
         self.tempo['tgt'] = Ttgt
+
+    def _crossFadeRegion(self): # Computes the cross fade region for the mixed song
+        Na = self.beats['in'].shape[0]-1
+
+        scores = [self._score(i, Na) for i in xrange(2, int(Na/4))]
+        noBeats = np.argmax(scores)+2
+
+        inDuration = librosa.get_duration(y=self.Yin, sr=self.sr)
+        fadeInStart = librosa.frames_to_time(self.beats['in'], sr=self.sr)[-int(noBeats/2)]
+        fadeIn = inDuration - fadeInStart
+
+        fadeOut = librosa.frames_to_time(self.beats['out'], sr=self.sr)[int(noBeats/2)]
+
+        print "Best Power Corelation Scores=", np.max(scores)
+        print "Number of beats in cross fade region=", noBeats
+        print "fadeInStart=", fadeInStart
+        print "fadeOutEnd=", fadeOut
+        print "Cross Fade Time=", fadeIn+fadeOut
+
+        self.crossFadeTime = fadeIn + fadeOut
+
+
+    def _score(self, T, Na):
+        cr = 0
+        for i in xrange(1, T+1):
+            cr += self.beats['in'][Na-i+1]*self.beats['out'][i]
+        return cr/T
 
 
 
