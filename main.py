@@ -21,6 +21,7 @@ class mash:
         self._load(cached=cached)
         self._extract()
         self._segment()
+        self._speedUp()
 
     def _setup(self):
         if not os.path.exists('cache'):
@@ -117,7 +118,7 @@ class mash:
         print "fadeOutEnd=", fadeOut
         print "Cross Fade Time=", fadeIn+fadeOut
 
-        self.crossFade = [fadeInStart, fadeOut]
+        self.crossFade = [fadeInStart*1000, fadeOut*1000] # In milliseconds
 
 
     def _score(self, T, Na):
@@ -138,7 +139,20 @@ class mash:
             'in': [ sIn[:self.crossFade[0]], sIn[self.crossFade[0]:] ],
             'out': [ sOut[:self.crossFade[1]], sOut[self.crossFade[1]:] ],
         }
+        del sIn, sOut
 
+    def _speedUp(self):
+        s1 = self.segments['in'][1]
+        s2 = self.segments['out'][0]
+
+        speed1 = self.tempo['tgt']/self.tempo['in']
+        speed2 = self.tempo['tgt']/self.tempo['out']
+
+        print "Playback Speed of in end segment=",speed1,'X'
+        print "Playback Speed of out start segment=",speed2,'X'
+
+        s1 = s1.speedup(playback_speed=speed1)
+        s2 = s1.speedup(playback_speed=speed2)
 
 
 
