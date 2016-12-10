@@ -1,6 +1,6 @@
 from __future__ import division
 
-import librosa
+import librosa, pydub
 import numpy as np
 import pickle, json, os
 
@@ -12,12 +12,15 @@ class mash:
         self.songs = json_
         self.Yin = []
         self.Yout = []
+        self.pathIn = []
+        self.pathOut = []
         self.beats = {'in': [], 'out': []}
         self.tempo = {'in': 0, 'out': 0}
 
         self._setup()
         self._load(cached=cached)
         self._extract()
+        self._segment()
 
     def _setup(self):
         if not os.path.exists('cache'):
@@ -31,17 +34,21 @@ class mash:
                     if song['mixin']:
                         print "Yin=", song['name']
                         self.Yin = pickle.load(f)
+                        self.pathIn = song['path']
                     else:
                         print "Yout=", song['name']
                         self.Yout.append(pickle.load(f))
+                        self.pathOut.append(song['path'])
                 continue
 
             print "\nLoading", song['name']
             y, sr = librosa.load(song['path'], sr=self.sr)
             if song['mixin']:
                 self.Yin = y
+                self.pathIn = song['path']
             else:
                 self.Yout.append(y)
+                self.pathOut.append(song['path'])
             print "[SUCCESS] Loaded", song['name']
 
             if cached:
@@ -56,6 +63,7 @@ class mash:
     def _extract(self):
         # TODO: Add cosine distance similarity to choose the best mixout
         self.Yout = self.Yout[0] # NOTE: considering 1mixin & 1mixout
+        self.pathOut = self.pathOut[0]
 
         self.tempo['in'], self.beats['in'] = librosa.beat.beat_track(y=self.Yin, sr=self.sr)
         self.tempo['out'], self.beats['out'] = librosa.beat.beat_track(y=self.Yout, sr=self.sr)
@@ -109,7 +117,7 @@ class mash:
         print "fadeOutEnd=", fadeOut
         print "Cross Fade Time=", fadeIn+fadeOut
 
-        self.crossFadeTime = fadeIn + fadeOut
+        self.crossFade = [fadeInStart, fadeOut]
 
 
     def _score(self, T, Na):
@@ -117,6 +125,20 @@ class mash:
         for i in xrange(1, T+1):
             cr += self.beats['in'][Na-i+1]*self.beats['out'][i]
         return cr/T
+
+    def _segment(self):
+        print "Started Segmentation"
+
+        sIn = pydub.AudioSegment.from_file(self.pathIn, format="mp3")
+        sOut = pydub.AudioSegment.from_file(self.pathOut, format="mp3")
+
+        print "[SUCCESS] Segmented audio files"
+
+        self.segments = {
+            'in': [ sIn[:self.crossFade[0]], sIn[self.crossFade[0]:] ],
+            'out': [ sOut[:self.crossFade[1]], sOut[self.crossFade[1]:] ],
+        }
+
 
 
 
