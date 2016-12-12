@@ -2,6 +2,7 @@ from __future__ import division
 
 import librosa, pydub
 import numpy as np
+from tempfile import TemporaryFile
 import pickle, json, os
 
 class mash:
@@ -22,6 +23,11 @@ class mash:
         self._extract()
         self._segment()
         self._speedUp()
+        out = self._mix()
+
+        print "Exporting..."
+        out.export(out_f="final.mp3", format="mp3")
+        print "[SUCCESS] Export as `final.mp3`"
 
     def _setup(self):
         if not os.path.exists('cache'):
@@ -154,7 +160,20 @@ class mash:
         s1 = s1.speedup(playback_speed=speed1)
         s2 = s1.speedup(playback_speed=speed2)
 
+    def _mix(self):
+        xf = self.segments['in'][1].fade(to_gain=-120, start=0, end=float('inf'))
+        xf *= self.segments['out'][0].fade(from_gain=-120, start=0, end=float('inf'))
 
+        out = TemporaryFile()
+
+        out.write(self.segments['in'][0]._data)
+        out.write(xf._data)
+        out.write(self.segments['out'][1]._data)
+
+        out.seek(0)
+
+        print "[SUCCESS] Mixed 4 audio segment to 1"
+        return self.segments['in'][0]._spawn(data=out)
 
 if __name__ == '__main__':
     with open('songs.json', 'r') as f:
