@@ -5,3 +5,5 @@ dump/*.*
 __pycache__/
 *.py[cod]
 *$py.class
+
+*.mp3

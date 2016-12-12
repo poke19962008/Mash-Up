@@ -90,11 +90,11 @@ class mash:
 
         Tin_ = [(2**c)*self.tempo['in'] for c in C]
         TinIndex_ = np.argmin(np.absolute(Tin_ - self.tempo['out']))
-        Copt = Tin_[TinIndex_]
+        Copt = C[TinIndex_]
         Bopt = (2**Copt)*self.tempo['in']
 
-        Tlow = np.min(Bopt, self.tempo['out'])
-        Thigh = np.max(Bopt, self.tempo['out'])
+        Tlow = min(Bopt, self.tempo['out'])
+        Thigh = max(Bopt, self.tempo['out'])
 
         a, b = 0.765, 1
         Ttgt = (a-b)*Tlow + np.sqrt( ((a-b)**2)*(Tlow**2) + 4*a*b*Thigh*Tlow )

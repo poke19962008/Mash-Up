@@ -1,11 +1,11 @@
 [
   {
-    "name": "Uptown Funk",
-    "path": "dump/uptown.mp3",
+    "name": "fragmented",
+    "path": "dump/fragmented.mp3",
     "mixin": true
   }, {
-    "name": "Jam",
-    "path": "dump/Jam.mp3",
+    "name": "red-e",
+    "path": "dump/red-e.mp3",
     "mixin": false
   }
 ]
