@@ -8,9 +8,9 @@ For the demonstration purpose I have mashed [Fragmented](http://www.nihilus.net/
 
 ### Optimal Tempo Adjustment Coefficient Computation (OTAC)
 
-In order to automatically generate a smooth Song to Song (StS) transition, a unique tempo adjustment technique is applied. It computes the optimal tempo adjustment coeffecients, hereafter described as OTAC, whicj express the fastors of tempo adjustment for the songs to be consecutively played, thus it is capable of automatically generating smooth Sts transition for any given combination of song. Diagram below shows the tempi of the target songs in StS transition. Here `Ta` & `Tb` are the tempo of song A & B.
+In order to automatically generate a smooth Song to Song (StS) transition, a unique tempo adjustment technique is applied. It computes the optimal tempo adjustment coeffecients, here after described as OTAC, which express the factors of tempo adjustment for the songs to be consecutively played, thus it is capable of automatically generating smooth StS transition for any given combination of song. Diagram below shows the tempi of the target songs in StS transition. Here `Ta` & `Tb` are the tempo of song A & B.
 
-![image](some url)
+![image](https://raw.githubusercontent.com/poke19962008/Mash-Up/master/res/sc1.png)
 
 ### Beat Adjustment and Crossfading
 
@@ -25,9 +25,9 @@ It will use aural similarity to determine the mashability of two song. Songs whi
 
 For this it samples the audio at 22,500Hz converting it into raw power signal. Then Step Wise Fast Fourier Transformation (FFT) can be used to bin the power into 12 semi tones. Thus for each song we get 12*(number of sample points) matrix, called chroma.
 
-![image](hello)
+![image](https://raw.githubusercontent.com/poke19962008/Mash-Up/master/res/sc2.png)
 
-It will then compute the cosine distance between corresponding chroma vectors of the two songs to come up with an array of cosine distance. Then the mean can be calculated. A smaller cosine distance means the songs have close semitone composition and thus well sound well together.
+It will then compute the cosine distance between corresponding chroma vectors of the two songs to come up with an array of cosine distance. From their mean can be calculated. A smaller cosine distance means the songs have close semitone composition and thus well sound well together.
 
 > Blog Comming Soon!!
 
