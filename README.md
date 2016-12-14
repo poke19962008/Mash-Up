@@ -15,7 +15,7 @@ In order to automatically generate a smooth Song to Song (StS) transition, a uni
 ### Beat Adjustment and Crossfading
 
 Here the two songs cross fades with each other. When songs with strong beats is adjusted to weaker beat of the other song, this cause discomfortness to hear.
-So to eliminate the above problem it computed the `cross-correlation of the beats of the target songs withn the range of the cross fade`. For this it computes the power of located near the beat. The power of spectograme are computed by the `Fast Fourier Transformation` of the song sampled at `22,500Hz`.
+So to eliminate the above problem it computes the `cross-correlation of the beats of the target songs withn the range of the cross fade`. The power located near the beats are passed as the parameters. The power of spectograme are computed by the `Fast Fourier Transformation` of the song sampled at `22,500Hz`.
 
 ## Song Selection
 
