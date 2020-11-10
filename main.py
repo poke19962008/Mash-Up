@@ -25,9 +25,9 @@ class mash:
         self._speedUp()
         out = self._mix()
 
-        print "Exporting..."
+        print("Exporting...")
         out.export(out_f="final.mp3", format="mp3")
-        print "[SUCCESS] Export as `final.mp3`"
+        print("[SUCCESS] Export as `final.mp3`")
 
     def _setup(self):
         if not os.path.exists('cache'):
@@ -36,19 +36,19 @@ class mash:
     def _load(self, cached=True):
         for song in self.songs:
             if os.path.exists("cache/%s.pkl"%song['name']):
-                print "\nLoading", song['name'], "from cache"
+                print("\nLoading", song['name'], "from cache")
                 with open("cache/%s.pkl"%song['name'], 'rb') as f:
                     if song['mixin']:
-                        print "Yin=", song['name']
+                        print("Yin=", song['name'])
                         self.Yin = pickle.load(f)
                         self.pathIn = song['path']
                     else:
-                        print "Yout=", song['name']
+                        print("Yout=", song['name'])
                         self.Yout.append(pickle.load(f))
                         self.pathOut.append(song['path'])
                 continue
 
-            print "\nLoading", song['name']
+            print("\nLoading", song['name'])
             y, sr = librosa.load(song['path'], sr=self.sr)
             if song['mixin']:
                 self.Yin = y
@@ -56,16 +56,16 @@ class mash:
             else:
                 self.Yout.append(y)
                 self.pathOut.append(song['path'])
-            print "[SUCCESS] Loaded", song['name']
+            print("[SUCCESS] Loaded", song['name'])
 
             if cached:
                 try:
                     with open('cache/%s.pkl'%song['name'], 'wb') as f:
                         pickle.dump(y, f)
-                        print "[SUCCESS] Cached", song['name']
+                        print("[SUCCESS] Cached", song['name'])
                 except Exception as e:
-                    print "[FAILED] Caching", song['name']
-                    print e
+                    print("[FAILED] Caching", song['name'])
+                    print(e)
 
     def _extract(self):
         # TODO: Add cosine distance similarity to choose the best mixout
@@ -75,8 +75,8 @@ class mash:
         self.tempo['in'], self.beats['in'] = librosa.beat.beat_track(y=self.Yin, sr=self.sr)
         self.tempo['out'], self.beats['out'] = librosa.beat.beat_track(y=self.Yout, sr=self.sr)
 
-        print "TempoIn=", self.tempo['in']
-        print "TempoOut=", self.tempo['out']
+        print("TempoIn=", self.tempo['in'])
+        print("TempoOut=", self.tempo['out'])
 
         self._OTAC()
         self._crossFadeRegion()
@@ -100,16 +100,16 @@ class mash:
         Ttgt = (a-b)*Tlow + np.sqrt( ((a-b)**2)*(Tlow**2) + 4*a*b*Thigh*Tlow )
         Ttgt = Ttgt/(2*a)
 
-        print "FoptIn=", Ttgt/Bopt
-        print "FoptOut=", Ttgt/self.tempo['out']
-        print "Ttgt=", Ttgt
+        print("FoptIn=", Ttgt/Bopt)
+        print("FoptOut=", Ttgt/self.tempo['out'])
+        print("Ttgt=", Ttgt)
 
         self.tempo['tgt'] = Ttgt
 
     def _crossFadeRegion(self): # Computes the cross fade region for the mixed song
         Na = self.beats['in'].shape[0]-1
 
-        scores = [self._score(i, Na) for i in xrange(2, int(Na/4))]
+        scores = [self._score(i, Na) for i in range(2, int(Na/4))]
         noBeats = np.argmax(scores)+2
 
         inDuration = librosa.get_duration(y=self.Yin, sr=self.sr)
@@ -118,28 +118,28 @@ class mash:
 
         fadeOut = librosa.frames_to_time(self.beats['out'], sr=self.sr)[int(noBeats/2)]
 
-        print "Best Power Corelation Scores=", np.max(scores)
-        print "Number of beats in cross fade region=", noBeats
-        print "fadeInStart=", fadeInStart
-        print "fadeOutEnd=", fadeOut
-        print "Cross Fade Time=", fadeIn+fadeOut
+        print("Best Power Corelation Scores=", np.max(scores))
+        print("Number of beats in cross fade region=", noBeats)
+        print("fadeInStart=", fadeInStart)
+        print("fadeOutEnd=", fadeOut)
+        print("Cross Fade Time=", fadeIn+fadeOut)
 
         self.crossFade = [fadeInStart*1000, fadeOut*1000] # In milliseconds
 
 
     def _score(self, T, Na):
         cr = 0
-        for i in xrange(1, T+1):
+        for i in range(1, T+1):
             cr += self.beats['in'][Na-i+1]*self.beats['out'][i]
         return cr/T
 
     def _segment(self):
-        print "Started Segmentation"
+        print("Started Segmentation")
 
         sIn = pydub.AudioSegment.from_file(self.pathIn, format="mp3")
         sOut = pydub.AudioSegment.from_file(self.pathOut, format="mp3")
 
-        print "[SUCCESS] Segmented audio files"
+        print("[SUCCESS] Segmented audio files")
 
         self.segments = {
             'in': [ sIn[:self.crossFade[0]], sIn[self.crossFade[0]:] ],
@@ -154,8 +154,8 @@ class mash:
         speed1 = self.tempo['tgt']/self.tempo['in']
         speed2 = self.tempo['tgt']/self.tempo['out']
 
-        print "Playback Speed of in end segment=",speed1,'X'
-        print "Playback Speed of out start segment=",speed2,'X'
+        print("Playback Speed of in end segment=",speed1,'X')
+        print("Playback Speed of out start segment=",speed2,'X')
 
         s1 = s1.speedup(playback_speed=speed1)
         s2 = s1.speedup(playback_speed=speed2)
@@ -172,7 +172,7 @@ class mash:
 
         out.seek(0)
 
-        print "[SUCCESS] Mixed 4 audio segment to 1"
+        print("[SUCCESS] Mixed 4 audio segment to 1")
         return self.segments['in'][0]._spawn(data=out)
 
 if __name__ == '__main__':
